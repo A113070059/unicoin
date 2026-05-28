@@ -957,35 +957,24 @@ export default function AppSimulator({ onBudgetUsageChange }: AppSimulatorProps)
   });
 
   return (
-    <div id="uni-coin-app-simulator" className="flex flex-col items-center justify-center p-2 lg:p-4 min-h-[680px]">
+    <div id="uni-coin-app-simulator" className="flex flex-col items-center justify-center p-0 sm:p-2 lg:p-4 min-h-screen sm:min-h-[680px] w-full">
       
-      {/* Outer Smartphone hardware simulation cover */}
-      <div className="relative w-full max-w-[370px] bg-slate-900 p-3 pb-4 rounded-[42px] shadow-2xl border-4 border-slate-800 ring-1 ring-white/10 overflow-hidden">
+      {/* Responsive App Core Container styled as a beautiful web dashboard card */}
+      <div className={`relative w-full h-screen sm:h-[680px] sm:max-w-md ${themeStyles.screenBg} text-slate-800 sm:rounded-3xl overflow-hidden flex flex-col transition-all duration-500 select-none border-0 sm:border border-white/[0.08] sm:shadow-2xl`}>
         
-        {/* Smartphone Notch & Speaker */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-4 bg-slate-950 rounded-full flex justify-between items-center px-4 z-40">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-          <span className="w-12 h-1 bg-slate-800 rounded-full" />
-          <span className="w-2 h-2 rounded-full bg-blue-500/80 ring-2 ring-blue-500/20" />
+        {/* Simple Web App Header bar replacing simulated iOS status bar */}
+        <div className={`pt-4 px-5 pb-2 text-[11.5px] font-bold flex justify-between items-center z-30 border-b border-slate-250/10 ${isSoilMode ? 'bg-[#3b3530]/5 text-black border-slate-900/10' : 'bg-white/40 text-slate-600 backdrop-blur-sm'}`}>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+            <span className="font-semibold uppercase tracking-wider font-mono">UniCoin App System</span>
+          </div>
+          <span className="text-[10px] bg-slate-400/20 text-slate-500 font-bold px-2 py-0.5 rounded-full select-none">
+            極簡理財・社交分帳
+          </span>
         </div>
 
-        {/* Smartphone Internal Screen Viewport */}
-        <div className={`relative ${themeStyles.screenBg} text-slate-800 rounded-[32px] h-[670px] overflow-hidden flex flex-col transition-colors duration-500 select-none border border-slate-950`}>
-          
-          {/* iOS-like Header Grid bar */}
-          <div className={`pt-6 px-5 pb-2 text-[11px] font-semibold flex justify-between items-center z-30 ${isSoilMode ? 'bg-[#3b3530]/5 text-black' : 'bg-white/20 text-slate-500'}`}>
-            <span id="simulator-utc-time">02:54 UTC</span>
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[9px] bg-slate-300/10 px-1 rounded border border-slate-400/20 text-slate-500">Live Proto</span>
-              <Wifi className="w-3 h-3 text-slate-500" />
-              <div className="flex items-center gap-0.5">
-                <Battery className="w-3.5 h-3.5 text-slate-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Core Interactive screens router */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-20">
+        {/* Core Interactive screens router */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-20">
             <AnimatePresence mode="wait">
               
               {/* SCREEN: HOME DASHBOARD */}
@@ -2858,7 +2847,7 @@ export default function AppSimulator({ onBudgetUsageChange }: AppSimulatorProps)
           </div>
 
           {/* Smartphone iOS-like Bottom Navigation bar anchor tabs */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-2.5 flex justify-around items-center rounded-b-[32px] z-30 select-none">
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-2.5 flex justify-around items-center sm:rounded-b-3xl rounded-none z-30 select-none">
             <button
               id="btn-nav-home"
               onClick={() => setActiveScreen('home')}
@@ -3129,38 +3118,6 @@ export default function AppSimulator({ onBudgetUsageChange }: AppSimulatorProps)
           </AnimatePresence>
 
         </div>
-      </div>
-      
-      {/* Interactive toggle controllers below frame */}
-      <div className="mt-3 flex gap-2 justify-center max-w-[375px] w-full bg-[#1e2538] p-2.5 rounded-xl border border-slate-700/60 shadow-md">
-        <button
-          onClick={() => {
-            // Force simulated expense to trigger dirt-eating mode (total expense becomes limit + 500)
-            const targetAmount = Math.max(0, monthlyLimit - totalExpenses + 250);
-            const newTx: Transaction = {
-              id: Date.now().toString(),
-              amount: targetAmount,
-              category: '學餐/宵夜',
-              note: '強制爆產大會餐 🍖',
-              date: new Date().toISOString(),
-              isInvoiceSynced: false
-            };
-            setTransactions([newTx, ...transactions]);
-          }}
-          className="flex-1 py-1.5 px-2 bg-rose-950/40 hover:bg-rose-900/40 text-rose-400 rounded-lg text-[10px] font-semibold border border-rose-500/20 active:scale-95 transition text-center"
-        >
-          💥 模擬一鍵花光 (觸發吃土模式)
-        </button>
-        <button
-          onClick={() => {
-            // Restore budget back to safety
-            setTransactions(transactions.filter(t => t.note !== '強制爆產大會餐 🍖' && t.amount < 1000));
-          }}
-          className="flex-1 py-1.5 px-2 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 rounded-lg text-[10px] font-semibold border border-emerald-500/20 active:scale-95 transition text-center"
-        >
-          🌱 模擬補血重新做人 (重設正常)
-        </button>
-      </div>
     </div>
   );
 }
