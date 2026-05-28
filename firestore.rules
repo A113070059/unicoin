@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Validation schemas
+    function isValidTransaction(data) {
+      return data.id is string && data.id.size() <= 64
+        && data.amount is number && data.amount >= 0
+        && data.category is string && data.category.size() <= 64
+        && data.note is string && data.note.size() <= 128
+        && data.date is string && data.date.size() <= 64;
+    }
+
+    function isValidAAGroup(data) {
+      return data.id is string && data.id.size() <= 64
+        && data.name is string && data.name.size() <= 128
+        && data.totalAmount is number && data.totalAmount >= 0
+        && data.paidBy is string && data.paidBy.size() <= 64
+        && data.participants is list
+        && data.participants.size() >= 1 && data.participants.size() <= 20
+        && data.splitType is string && (data.splitType == '平分' || data.splitType == '自訂')
+        && data.date is string && data.date.size() <= 64
+        && data.status is string && (data.status == 'pending' || data.status == 'completed' || data.status == 'canceled');
+    }
+
+    function isValidInvoice(data) {
+      return data.id is string && data.id.size() <= 64
+        && data.amount is number && data.amount >= 0
+        && data.merchant is string && data.merchant.size() <= 128
+        && data.details is string && data.details.size() <= 256
+        && data.date is string && data.date.size() <= 64
+        && data.isSynced is bool
+        && data.prizeChecked is bool
+        && data.prizeResult is string && data.prizeResult.size() <= 64;
+    }
+
+    function isValidUserSetting(data) {
+      return data.monthlyLimit is number && data.monthlyLimit >= 0;
+    }
+
+    function isValidPublicUser(data) {
+      return data.uid is string && data.uid.size() <= 128
+        && data.email is string && data.email.size() <= 128
+        && data.displayName is string && data.displayName.size() <= 128
+        && (!data.keys().hasAll(['phoneNumber']) || (data.phoneNumber is string && data.phoneNumber.size() <= 32))
+        && (!data.keys().hasAll(['birthday']) || (data.birthday is string && data.birthday.size() <= 32))
+        && (!data.keys().hasAll(['avatarUrl']) || (data.avatarUrl is string && data.avatarUrl.size() <= 256));
+    }
+
+    function isValidNotification(data) {
+      return data.id is string && data.id.size() <= 64
+        && data.title is string && data.title.size() <= 128
+        && data.message is string && data.message.size() <= 512
+        && data.senderName is string && data.senderName.size() <= 128
+        && data.amount is number
+        && data.groupId is string && data.groupId.size() <= 64
+        && data.date is string && data.date.size() <= 64
+        && data.status is string && (data.status == 'unread' || data.status == 'read');
+    }
+
+    // Root paths
+    match /publicUsers/{email} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.token.email == email && isValidPublicUser(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /transactions/{transactionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(transactionId) && isValidTransaction(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(transactionId) && isValidTransaction(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /aaGroups/{aaGroupId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(aaGroupId) && isValidAAGroup(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(aaGroupId) && isValidAAGroup(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /invoices/{invoiceId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(invoiceId) && isValidInvoice(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(invoiceId) && isValidInvoice(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      // Settings doc
+      match /settings/allowance {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidUserSetting(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /notifications/{notificationId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isSignedIn() && isValidId(notificationId) && isValidNotification(request.resource.data);
+        allow update: if isOwner(userId) && isValidId(notificationId) && isValidNotification(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

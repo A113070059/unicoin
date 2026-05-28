@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Student expense record in UniCoin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the transaction" },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "category": { "type": "string", "enum": ["學餐/宵夜", "書籍教材", "學雜費", "房租水電", "社團系隊", "社交娛樂", "交通費", "其他"], "description": "Expense category" },
+        "note": { "type": "string", "description": "Item description or note" },
+        "date": { "type": "string", "description": "Date ISO string" },
+        "isInvoiceSynced": { "type": "boolean", "description": "If synced from carrier invoices" }
+      },
+      "required": ["id", "amount", "category", "note", "date"]
+    },
+    "AAGroup": {
+      "title": "AAGroup",
+      "description": "Group AA expense sharing record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Group UUID" },
+        "name": { "type": "string", "description": "Group or expense purpose name" },
+        "totalAmount": { "type": "number", "description": "Total spent amount for the group" },
+        "paidBy": { "type": "string", "description": "Who paid the initial bill" },
+        "participants": { "type": "array", "description": "People sharing the expense" },
+        "splitType": { "type": "string", "enum": ["平分", "自訂"] },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "canceled"] }
+      },
+      "required": ["id", "name", "totalAmount", "paidBy", "participants", "splitType", "date", "status"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Taiwan E-invoice Carrier item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Invoice number or ID" },
+        "amount": { "type": "number" },
+        "merchant": { "type": "string" },
+        "details": { "type": "string" },
+        "date": { "type": "string" },
+        "isSynced": { "type": "boolean" },
+        "prizeChecked": { "type": "boolean" },
+        "prizeResult": { "type": "string", "enum": ["未開獎", "未中獎", "中獎200元", "中獎1000元"] }
+      },
+      "required": ["id", "amount", "merchant", "details", "date", "isSynced", "prizeChecked", "prizeResult"]
+    },
+    "UserSetting": {
+      "title": "UserSetting",
+      "description": "User specific custom limits",
+      "type": "object",
+      "properties": {
+        "monthlyLimit": { "type": "number", "description": "Maximum monthly expense allowance limit" }
+      },
+      "required": ["monthlyLimit"]
+    },
+    "PublicUser": {
+      "title": "PublicUser",
+      "description": "Public profile indexed by email to find other participants",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "phoneNumber": { "type": "string", "description": "User mobile phone number used for lookup" },
+        "birthday": { "type": "string", "description": "User birth date" },
+        "avatarUrl": { "type": "string", "description": "User avatar emoji or icon URL" }
+      },
+      "required": ["uid", "email", "displayName"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Transaction bill splitting request notification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "senderName": { "type": "string" },
+        "amount": { "type": "number" },
+        "groupId": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["unread", "read"] }
+      },
+      "required": ["id", "title", "message", "senderName", "amount", "groupId", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/publicUsers/{email}": {
+      "schema": "PublicUser",
+      "description": "Collection mapping registered student emails to their corresponding Firebase UID and Display Name"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Subcollection storing transaction records for a specific student"
+    },
+    "/users/{userId}/aaGroups/{aaGroupId}": {
+      "schema": "AAGroup",
+      "description": "Subcollection storing AA budget groups"
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "Subcollection storing user invoices synchronized to carrier"
+    },
+    "/users/{userId}/settings/allowance": {
+      "schema": "UserSetting",
+      "description": "Document holding user settings such as allowance limit"
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Student split bill and peer request notifications"
+    }
+  }
+}

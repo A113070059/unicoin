@@ -1,0 +1,6 @@
+{
+  "name": "UniCoin",
+  "description": "大學生專屬記帳與社交分帳 App 的極簡高互動系統設計與 Live 互動原型",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
